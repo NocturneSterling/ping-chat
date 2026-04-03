@@ -5,33 +5,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"golang.org/x/crypto/chacha20poly1305"//if throwing errors, use "go get golang.com/..."
+	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/scrypt"
 )
 
-func runClient() {//takes message and password, encrypts, decrypts, checks hash
-	var pass string//please note servers will use main at main.go
-	var message string
-
-	
-	fmt.Println("Input password")
-	fmt.Scan(&pass)
-	fmt.Println("Input message")
-	fmt.Scan(&message)
-
-	encrypted := encrypt(message, pass)
-	fmt.Println(encrypted)
-	fmt.Println(decrypt(encrypted, pass))
-	fmt.Println(extractHash(encrypted))
-}
-
-func deriveKey(pass string) []byte { //used in encrypt and decrypt
-	hash := sha256.Sum256([]byte(pass))
-	key, _ := scrypt.Key([]byte(pass), hash[:8], 32768, 8, 1, 32)
-	return key
-}
-
-func encrypt(text, pass string) []byte {//generate key and hash
 func deriveKey(pass []byte) []byte {
 	hash := sha256.Sum256(pass)
 	key, _ := scrypt.Key(pass, hash[:8], 32768, 8, 1, 32)
@@ -45,7 +22,7 @@ func encryptUsingPass(text string, pass string) []byte {
 	nonce := make([]byte, aead.NonceSize())
 	rand.Read(nonce)
 	ct := aead.Seal(nonce, nonce, []byte(text), nil)
-	return append(hash[:], ct...) //encrypted in form of slice of bytes 
+	return append(hash[:], ct...)
 }
 
 func encryptUsingHash(data []byte, pass []byte) []byte {
@@ -82,7 +59,6 @@ func decryptUsingPass(data []byte, pass string) string {
 		return err.Error()
 	}
 	return string(plain)
-}
 }
 
 func decryptUsingHash(ct []byte, pass []byte) []byte {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -70,8 +69,4 @@ func updateChat(ip string, encrypted []byte) {
 		LastMsgEncrypted: encrypted,
 		LastMsgTimestamp: int(time.Now().Unix()),
 	}
-}
-
-func runServer() {
-	listenForPackets()
 }
