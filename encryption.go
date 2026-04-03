@@ -9,6 +9,22 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+func runClient() {//takes message and password, encrypts, decrypts, checks hash
+	var pass string//please note servers will use main at main.go
+	var message string
+
+	
+	fmt.Println("Input password")
+	fmt.Scan(&pass)
+	fmt.Println("Input message")
+	fmt.Scan(&message)
+
+	encrypted := encrypt(message, pass)
+	fmt.Println(encrypted)
+	fmt.Println(decrypt(encrypted, "password123"))
+	fmt.Println(extractHash(encrypted))
+}
+
 func deriveKey(pass string) []byte { //used in encrypt and decrypt
 	hash := sha256.Sum256([]byte(pass))
 	key, _ := scrypt.Key([]byte(pass), hash[:8], 32768, 8, 1, 32)
@@ -39,20 +55,4 @@ func decrypt(data []byte, pass string) string {
 		return ""
 	}
 	return string(plain)
-}
-
-func main() {//takes message and password, encrypts, decrypts, checks hash
-	var pass string//please note servers will use main at main.go
-	var message string
-
-	
-	fmt.Println("Input password")
-	fmt.Scan(&pass)
-	fmt.Println("Input message")
-	fmt.Scan(&message)
-
-	encrypted := encrypt(message, pass)
-	fmt.Println(encrypted)
-	fmt.Println(decrypt(encrypted, "password123"))
-	fmt.Println(extractHash(encrypted))
 }
