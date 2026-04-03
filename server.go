@@ -17,7 +17,7 @@ var store = map[string]MsgRecord{}
 
 // reply to any incoming pings
 // gets incoming message ip and encrypted bytes from the client, returns what to reply with
-func sendReply(ip string, incomingPayload []byte) string {
+func sendReply(ip string, incomingPayload []byte) []byte {
 	key := extractHash(incomingPayload)
 	if len(incomingPayload) == 32 {
 		record, exists := store[string(key)]
@@ -34,9 +34,9 @@ func sendReply(ip string, incomingPayload []byte) string {
 		fmt.Println(string(recordJson))
 		if err != nil {
 			fmt.Println("Error encoding record:", err)
-			return ""
+			return []byte{}
 		}
-		return string(encryptUsingHash(recordJson, key))
+		return encryptUsingHash(recordJson, key)
 	}
 
 	updateChat(ip, incomingPayload)
@@ -44,9 +44,9 @@ func sendReply(ip string, incomingPayload []byte) string {
 	recordJson, err := json.Marshal(record)
 	if err != nil {
 		fmt.Println("Error encoding record:", err)
-		return ""
+		return []byte{}
 	}
-	return string(encryptUsingHash(recordJson, key))
+	return encryptUsingHash(recordJson, key)
 }
 
 func updateChat(ip string, encrypted []byte) {
