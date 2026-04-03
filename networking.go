@@ -26,13 +26,7 @@ func enableKernelReplies(val bool) {
 		option = "1"
 	}
 	err := os.WriteFile("/proc/sys/net/ipv4/icmp_echo_ignore_all", []byte(option), 0644)
-	if err != nil {
-		if strings.Contains(err.Error(), "operation not permitted") {
-			fmt.Println("Error configuring kernel replies: this program needs root")
-			os.Exit(1)
-		}
-		panic(err)
-	}
+	processErr(err)
 }
 
 func sendBytes(data []byte, dest string) []byte {
@@ -44,13 +38,7 @@ func sendBytes(data []byte, dest string) []byte {
 	buf[2], buf[3] = byte(s>>8), byte(s)
 
 	c, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
-	if err != nil {
-		if strings.Contains(err.Error(), "operation not permitted") {
-			fmt.Println("Error: this program needs root")
-			os.Exit(1)
-		}
-		panic(err)
-	}
+	processErr(err)
 	defer c.Close()
 
 	dst, _ := net.ResolveIPAddr("ip4", dest)
@@ -71,13 +59,7 @@ func sendBytes(data []byte, dest string) []byte {
 
 func listenForPackets() {
 	c, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
-	if err != nil {
-		if strings.Contains(err.Error(), "operation not permitted") {
-			fmt.Println("Error: this program needs root")
-			os.Exit(1)
-		}
-		panic(err)
-	}
+	processErr(err)
 	defer c.Close()
 
 	buf := make([]byte, 1500)
@@ -106,4 +88,14 @@ func listenForPackets() {
 
 func sendString(data string, dest string) string {
 	return string(sendBytes([]byte(data), dest))
+}
+
+func processErr(err error) {
+	if err != nil {
+		if strings.Contains(err.Error(), "operation not permitted") {
+			fmt.Println("Error: this program needs root")
+			os.Exit(1)
+		}
+		panic(err)
+	}
 }
