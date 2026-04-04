@@ -6,7 +6,6 @@ import (
 
 var (
 	server       = flag.Bool("server", false, "run as a server")
-	send         = flag.Bool("send", false, "run as a sending term")
 	reauthKernel = flag.Bool("reauthKernel", false, "give authorization back to kernel to handle pings")
 	user         = flag.String("user", "guest", "user to chat as")
 	pass         = flag.String("pass", "", "shared password to chat using")
@@ -20,9 +19,7 @@ func main() {
 	} else if *server {
 		enableKernelReplies(false)
 		runServer()
-	} else if *send {
-		runClientSender()
 	} else {
-		runClientListener()
+		runClient()
 	}
 }
