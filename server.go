@@ -26,7 +26,7 @@ func sendReply(ip string, incomingPayload []byte) []byte {
 		}
 		record = store[string(key)]
 		recordJson, _ := json.Marshal(record)
-		return encrypt(recordJson, key)
+		return encryptToBytes(recordJson, key)
 	}
 
 	encrypted := incomingPayload[32:]
@@ -37,7 +37,7 @@ func sendReply(ip string, incomingPayload []byte) []byte {
 	}
 	record := store[string(key)]
 	recordJson, _ := json.Marshal(record)
-	return encrypt(recordJson, key)
+	return encryptToBytes(recordJson, key)
 }
 
 func runServer() {

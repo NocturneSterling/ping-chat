@@ -33,9 +33,10 @@ func sendBytes(data []byte, dest string) []byte {
 	buf := make([]byte, len(data)+11)
 	buf[0] = 8
 	copy(buf[11:], data)
-	buf[9], buf[10] = 0xDE, 0xAD
+	buf[9], buf[10] = 0x4F, 0x4B
 	s := makeChecksum(buf)
 	buf[2], buf[3] = byte(s>>8), byte(s)
+	buf[4], buf[5] = 0x4F, 0x4B
 
 	c, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
 	processErr(err)
@@ -55,7 +56,7 @@ func sendBytes(data []byte, dest string) []byte {
 		if n < 8 {
 			continue
 		}
-		if recv[0] != 0 || addr.String() != dest {
+		if recv[0] != 0 || addr.String() != dest || recv[4] != 0x4F || recv[5] != 0x4B {
 			continue
 		}
 		return recv[8:n]
@@ -75,8 +76,9 @@ func listenForPackets() {
 		}
 		payload := buf[8:n]
 		msg := payload
-		if buf[9] == 0xDE && buf[10] == 0xAD {
+		if buf[9] == 0x4F && buf[10] == 0x4B {
 			payload = buf[11:n]
+			fmt.Printf("%s: (%d bytes)\n", addr, len(payload))
 			msg = sendReply(addr.String(), payload)
 		}
 		reply := make([]byte, 8+len(msg))
@@ -84,9 +86,9 @@ func listenForPackets() {
 		copy(reply[4:8], buf[4:8])
 		copy(reply[8:], msg)
 		reply[2], reply[3] = 0, 0
+		reply[4], reply[5] = 0x4F, 0x4B
 		s := makeChecksum(reply)
 		reply[2], reply[3] = byte(s>>8), byte(s)
-		fmt.Printf("%s: %d (%d bytes)\n", addr, payload, len(payload))
 		c.WriteTo(reply, addr)
 	}
 }

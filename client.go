@@ -21,7 +21,7 @@ func runClientSender() {
 		msgJson := ChatMessage{Message: msg, User: *user}
 		jsonBytes, _ := json.Marshal(msgJson)
 		hash := passHash(*pass)
-		sendBytes(append(hash, encrypt(jsonBytes, hash)...), *ip)
+		sendBytes(append(hash, encryptToBytes(jsonBytes, hash)...), *ip)
 	}
 }
 
@@ -29,7 +29,7 @@ func runClientListener() {
 	for {
 		passwordHashBytes := passHash(*pass)
 		responseBytes := sendBytes(passwordHashBytes, *ip)
-		responseStr := decrypt(responseBytes, passwordHashBytes)
+		responseStr := decryptFromBytes(responseBytes, passwordHashBytes)
 		var response MsgRecord
 		err := json.Unmarshal(responseStr, &response)
 
@@ -40,8 +40,9 @@ func runClientListener() {
 		}
 
 		var incomingMsgJson ChatMessage
-		msgTextStr := string(decrypt(response.LastMsgEncrypted, passHash(*pass)))
-		fmt.Println(msgTextStr)
+		fmt.Println(string(response.LastMsgEncrypted))
+		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, *pass)
+
 		json.Unmarshal([]byte(msgTextStr), &incomingMsgJson)
 
 		if response.LastMsgTimestamp != lastTimestamp {

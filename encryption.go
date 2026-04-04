@@ -14,7 +14,7 @@ func deriveKey(pass []byte) []byte {
 	return key
 }
 
-func encrypt(data []byte, pass []byte) []byte {
+func encryptToBytes(data []byte, pass []byte) []byte {
 	key := deriveKey(pass)
 	aead, _ := chacha20poly1305.New(key)
 	nonce := make([]byte, aead.NonceSize())
@@ -32,7 +32,8 @@ func passHash(pass string) []byte {
 	return hash[:]
 }
 
-func decrypt(ct []byte, pass []byte) []byte {
+// this works fine
+func decryptFromBytes(ct []byte, pass []byte) []byte {
 	key := deriveKey(pass)
 	if len(ct) == 0 {
 		return []byte{}
@@ -42,4 +43,21 @@ func decrypt(ct []byte, pass []byte) []byte {
 	nonce, data := ct[:ns], ct[ns:]
 	bytes, _ := aead.Open(nil, nonce, data, nil)
 	return bytes
+}
+
+func decryptUsingPass(data []byte, pass string) string {
+	if len(data) < 32 {
+		return ""
+	}
+	key := deriveKey([]byte(pass))
+	aead, _ := chacha20poly1305.New(key)
+	ns := aead.NonceSize()
+	if len(data) < ns {
+		return "too short"
+	}
+	plain, err := aead.Open(nil, data[:ns], data[ns:], nil)
+	if err != nil {
+		return err.Error()
+	}
+	return string(plain)
 }
