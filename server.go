@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -21,42 +20,24 @@ func sendReply(ip string, incomingPayload []byte) []byte {
 	if len(incomingPayload) == 32 {
 		record, exists := store[string(key)]
 		if !exists {
-			record = MsgRecord{
-				LastMsgIp:        ip,
-				LastMsgEncrypted: key,
-				LastMsgTimestamp: int(time.Now().Unix()),
-			}
-			store[string(key)] = record
+			store[string(key)] = MsgRecord{LastMsgIp: ip, LastMsgTimestamp: int(time.Now().Unix())}
+		} else {
+			_ = record
 		}
+		record = store[string(key)]
+		recordJson, _ := json.Marshal(record)
+		return encrypt(recordJson, key)
+	}
 
-		recordJson, err := json.Marshal(record)
-		if err != nil {
-			fmt.Println("Error encoding record:", err)
-			return []byte{}
-		}
-		return encryptUsingHash(recordJson, key)
+	encrypted := incomingPayload[32:]
+	store[string(key)] = MsgRecord{
+		LastMsgIp:        ip,
+		LastMsgEncrypted: encrypted,
+		LastMsgTimestamp: int(time.Now().Unix()),
 	}
-	fmt.Println("OMG INCOMING MESSAGE")
-
-	record, exists := store[string(key)]
-	if !exists {
-		fmt.Println("AYO I GOT HERE NOT GOOD")
-		record = MsgRecord{
-			LastMsgIp:        ip,
-			LastMsgEncrypted: key,
-			LastMsgTimestamp: int(time.Now().Unix()),
-		}
-		store[string(key)] = record
-	}
-	fmt.Println(record.LastMsgEncrypted)
-	recordJson, err := json.Marshal(record)
-	fmt.Println("This is running. Told you so.")
-	fmt.Println(string(recordJson))
-	if err != nil {
-		fmt.Println("Error encoding record:", err)
-		return []byte{}
-	}
-	return encryptUsingHash(recordJson, key)
+	record := store[string(key)]
+	recordJson, _ := json.Marshal(record)
+	return encrypt(recordJson, key)
 }
 
 func runServer() {
