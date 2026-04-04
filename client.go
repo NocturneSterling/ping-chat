@@ -40,13 +40,12 @@ func runClientListener() {
 		}
 
 		var incomingMsgJson ChatMessage
-		fmt.Println(string(response.LastMsgEncrypted))
 		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, *pass)
 
 		json.Unmarshal([]byte(msgTextStr), &incomingMsgJson)
 
 		if response.LastMsgTimestamp != lastTimestamp {
-			fmt.Println("HOW TF IS IT HERE")
+			fmt.Println("ok so it thinks theres a new message")
 
 			fmt.Println(incomingMsgJson.User + ": " + incomingMsgJson.Message)
 			lastTimestamp = response.LastMsgTimestamp

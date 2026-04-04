@@ -32,11 +32,10 @@ func enableKernelReplies(val bool) {
 func sendBytes(data []byte, dest string) []byte {
 	buf := make([]byte, len(data)+11)
 	buf[0] = 8
-	copy(buf[11:], data)
 	buf[9], buf[10] = 0x4F, 0x4B
+	copy(buf[11:], data)
 	s := makeChecksum(buf)
 	buf[2], buf[3] = byte(s>>8), byte(s)
-	buf[4], buf[5] = 0x4F, 0x4B
 
 	c, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
 	processErr(err)
@@ -53,13 +52,10 @@ func sendBytes(data []byte, dest string) []byte {
 			fmt.Println("Error: ", err.Error())
 			return nil
 		}
-		if n < 8 {
+		if n < 11 || recv[0] != 0 || addr.String() != dest || recv[9] != 0x4F || recv[10] != 0x4B {
 			continue
 		}
-		if recv[0] != 0 || addr.String() != dest || recv[4] != 0x4F || recv[5] != 0x4B {
-			continue
-		}
-		return recv[8:n]
+		return recv[11:n]
 	}
 }
 
@@ -74,22 +70,29 @@ func listenForPackets() {
 		if n < 8 || buf[0] != 8 {
 			continue
 		}
-		payload := buf[8:n]
-		msg := payload
-		if buf[9] == 0x4F && buf[10] == 0x4B {
-			payload = buf[11:n]
+		var msg []byte
+		if n >= 11 && buf[9] == 0x4F && buf[10] == 0x4B {
+			payload := buf[11:n]
 			fmt.Printf("%s: (%d bytes)\n", addr, len(payload))
 			msg = sendReply(addr.String(), payload)
+			reply := make([]byte, 11+len(msg))
+			reply[0] = 0
+			reply[9], reply[10] = 0x4F, 0x4B
+			copy(reply[4:8], buf[4:8])
+			copy(reply[11:], msg)
+			reply[2], reply[3] = 0, 0
+			s := makeChecksum(reply)
+			reply[2], reply[3] = byte(s>>8), byte(s)
+			c.WriteTo(reply, addr)
+		} else {
+			reply := make([]byte, n)
+			reply[0] = 0
+			copy(reply[4:], buf[4:n])
+			reply[2], reply[3] = 0, 0
+			s := makeChecksum(reply)
+			reply[2], reply[3] = byte(s>>8), byte(s)
+			c.WriteTo(reply, addr)
 		}
-		reply := make([]byte, 8+len(msg))
-		reply[0] = 0
-		copy(reply[4:8], buf[4:8])
-		copy(reply[8:], msg)
-		reply[2], reply[3] = 0, 0
-		reply[4], reply[5] = 0x4F, 0x4B
-		s := makeChecksum(reply)
-		reply[2], reply[3] = byte(s>>8), byte(s)
-		c.WriteTo(reply, addr)
 	}
 }
 
