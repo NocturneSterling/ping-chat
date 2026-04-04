@@ -72,7 +72,8 @@ func listenForPackets() {
 		}
 		var msg []byte
 		if n >= 11 && buf[9] == 0x4F && buf[10] == 0x4B {
-			payload := buf[11:n]
+			payload := make([]byte, n-11)
+			copy(payload, buf[11:n])
 			fmt.Printf("%s: (%d bytes)\n", addr, len(payload))
 			msg = sendReply(addr.String(), payload)
 			reply := make([]byte, 11+len(msg))
