@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -16,8 +19,8 @@ var lastTimestamp int
 func runClientSender() {
 	for {
 		fmt.Printf("> ")
-		msg := ""
-		fmt.Scanln(&msg)
+		msg, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		msg = strings.TrimRight(msg, "\r\n")
 		msgJson := ChatMessage{Message: msg, User: *user}
 		jsonBytes, _ := json.Marshal(msgJson)
 		hash := passHash(*pass)
