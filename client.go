@@ -13,15 +13,15 @@ type ChatMessage struct {
 var lastTimestamp int
 
 func runClientSender(msg string) {
-	msgJson := ChatMessage{Message: msg, User: *user}
+	msgJson := ChatMessage{Message: msg, User: currentUser}
 	jsonBytes, _ := json.Marshal(msgJson)
-	hash := passHash(*pass)
+	hash := passHash(currentPass)
 	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(*pass))...), *ip)
 }
 
 func runClientListener() {
 	for {
-		passwordHashBytes := passHash(*pass)
+		passwordHashBytes := passHash(currentPass)
 		responseBytes := sendBytes(passwordHashBytes, *ip)
 		responseStr := decryptFromBytes(responseBytes, passwordHashBytes)
 		var response MsgRecord
@@ -31,7 +31,7 @@ func runClientListener() {
 			continue
 		}
 		var incomingMsgJson ChatMessage
-		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, *pass)
+		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, currentPass)
 		json.Unmarshal([]byte(msgTextStr), &incomingMsgJson)
 		if response.LastMsgTimestamp != lastTimestamp {
 			if incomingMsgJson.Message == "" && incomingMsgJson.User == "" {
@@ -45,8 +45,12 @@ func runClientListener() {
 	}
 }
 
+func listenClient(){
+	go runClientListener()
+}
+
 func runClient() {
 	initTUI(runClientSender)
-	go runClientListener()
+	//go runClientListener()
 	runTUI()
 }

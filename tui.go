@@ -53,7 +53,9 @@ mainView := tview.NewFlex().
 		currentPass = signIn.GetFormItemByLabel("password").(*tview.InputField).GetText()
 		_, color := signIn.GetFormItemByLabel("username color").(*tview.DropDown).GetCurrentOption()
 
-		fmt.Println(currentUser,currentPass,color)
+			fmt.Println(currentUser,currentPass,color)
+			listenClient()
+			//go runClientListener()
 			pages.SwitchToPage("main")
 		})
 	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
@@ -105,7 +107,7 @@ func tuiPrint(line string) {
 	})
 }
 
-func runTUI() {
+func runTUI() {//throwing errors
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
