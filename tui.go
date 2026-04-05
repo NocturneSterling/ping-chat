@@ -20,11 +20,15 @@ func initTUI(onSend func(string)) {
 	pages := tview.NewPages()
 	msgView = make(map[string]*tview.TextView)
 	chanPages := tview.NewPages()
+	var firstInput *tview.InputField
 
 	for i := 0; i < listNum; i++ {//initalize pages on per-channel basis
 		name := fmt.Sprintf("channel %d", i)
-		view, prim := channel(name, onSend)//channel returns TextView and Primitive
+		view, prim, input:= channel(name, onSend,)//channel returns TextView and Primitive
 		msgView[name] = view
+		if i == 0{
+			firstInput = input//
+		}
 			chanPages.AddPage(name,prim,true,i == 0)
 		}
 	
@@ -57,7 +61,7 @@ mainView := tview.NewFlex().
 			go listenClient()
 			//go runClientListener()
 			pages.SwitchToPage("main")//switch to other pages
-			app.SetFocus(list)//focus to whatever is selected
+			app.SetFocus(firstInput)//focus to whatever is selected
 		})
 	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
 	
@@ -67,7 +71,7 @@ mainView := tview.NewFlex().
 app.SetRoot(pages,true).SetFocus(signIn) //puts the user in sign in to start
 }
 
-func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive){
+func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive, *tview.InputField){
 	textView := tview.NewTextView().
 		SetScrollable(true).
 		SetDynamicColors(true)
@@ -98,7 +102,7 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 		AddItem(textView, 0, 1, false).
 		AddItem(inputBox, 3, 1, true)
 
-	return textView, flex
+	return textView, flex, inputBox
 }
 
 func tuiPrint(line string) {

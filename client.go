@@ -16,7 +16,7 @@ func runClientSender(msg string) {
 	msgJson := ChatMessage{Message: msg, User: currentUser}
 	jsonBytes, _ := json.Marshal(msgJson)
 	hash := passHash(currentPass)
-	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(*pass))...), *ip)
+	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(currentPass))...), *ip)
 }
 
 func runClientListener() {
