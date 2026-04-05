@@ -11,8 +11,8 @@ var (
 	msgView map[string]*tview.TextView
 	listNum int = 5
 	activeChannel string = "channel 0"
-	currentUser string
-	currentPass string 
+	currentUser string//both of these are assigned in sign in window
+	currentPass string//passed tp client.go
 )
 
 func initTUI(onSend func(string)) {
@@ -38,13 +38,13 @@ func initTUI(onSend func(string)) {
 	}
 
 
-chat := tview.NewFlex().SetDirection(tview.FlexRow).
+chat := tview.NewFlex().SetDirection(tview.FlexRow).//adds everything to flex, to be refrenced later
 	AddItem(chanPages,0,1, true)
 mainView := tview.NewFlex().
 	AddItem(list,20,0,false).
 	AddItem(chat,0,1,true)
 
-	signIn := tview.NewForm()
+	signIn := tview.NewForm()//input form, ran on launch
 		signIn.AddInputField("username", "", 20, nil, nil)
 		signIn.AddInputField("password", "", 20, nil, nil)
 		signIn.AddDropDown("username color",[]string{"red","blue","green"},0,nil)
@@ -54,15 +54,15 @@ mainView := tview.NewFlex().
 		_, color := signIn.GetFormItemByLabel("username color").(*tview.DropDown).GetCurrentOption()
 		_ = color //negate unused var
 			//fmt.Println(currentUser,currentPass,color)
-			listenClient()
+			go listenClient()
 			//go runClientListener()
 			pages.SwitchToPage("main")//switch to other pages
-			app.SetFocus(list)
+			app.SetFocus(list)//focus to whatever is selected
 		})
 	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
 	
 	pages.AddPage("signIn",signIn,true,true)
-	pages.AddPage("main",mainView,true,false)
+	pages.AddPage("main",mainView,true,false)//unable to be reached unless with sign in form
 
 app.SetRoot(pages,true).SetFocus(signIn) //puts the user in sign in to start
 }
@@ -82,7 +82,7 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 	inputBox.SetBackgroundColor(tcell.ColorDefault)
 	inputBox.SetFieldBackgroundColor(tcell.ColorDefault)
 
-	inputBox.SetDoneFunc(func(key tcell.Key) {
+	inputBox.SetDoneFunc(func(key tcell.Key) {//take input from inputBox
 		if key != tcell.KeyEnter {
 			return
 		}
@@ -94,7 +94,7 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 		go onSend(text)
 	})
 
-	flex := tview.NewFlex().SetDirection(tview.FlexRow).
+	flex := tview.NewFlex().SetDirection(tview.FlexRow).//puts text view and input into respective positions
 		AddItem(textView, 0, 1, false).
 		AddItem(inputBox, 3, 1, true)
 
@@ -102,7 +102,7 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 }
 
 func tuiPrint(line string) {
-	view := msgView[activeChannel]
+	view := msgView[activeChannel]//updates with new messages
 	app.QueueUpdateDraw(func() {
 		fmt.Fprintf(view, "%s\n", line)
 	})
