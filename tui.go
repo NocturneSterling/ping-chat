@@ -52,11 +52,12 @@ mainView := tview.NewFlex().
 		currentUser = signIn.GetFormItemByLabel("username").(*tview.InputField).GetText()
 		currentPass = signIn.GetFormItemByLabel("password").(*tview.InputField).GetText()
 		_, color := signIn.GetFormItemByLabel("username color").(*tview.DropDown).GetCurrentOption()
-
-			fmt.Println(currentUser,currentPass,color)
+		_ = color //negate unused var
+			//fmt.Println(currentUser,currentPass,color)
 			listenClient()
 			//go runClientListener()
-			pages.SwitchToPage("main")
+			pages.SwitchToPage("main")//switch to other pages
+			app.SetFocus(list)
 		})
 	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
 	
