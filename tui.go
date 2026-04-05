@@ -2,27 +2,37 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 var (
 	app     *tview.Application
-	msgView *tview.TextView
+	msgView map[string]*tview.TextView
+	listNum int = 5
+	activeChannel string = ""
 )
 
 func initTUI(onSend func(string)) {
 	app = tview.NewApplication()
+	pages := tview.NewPages()
+	msgView = make(map[string]*tview.TextView)
 
-	msgView = tview.NewTextView().
-		SetScrollable(true).
-		SetDynamicColors(true).
-		ScrollToEnd()
-	msgView.SetBackgroundColor(tcell.ColorDefault)
-	msgView.SetBorderPadding(0, 0, 1, 1)
-	msgView.SetBorder(true)
-	msgView.SetTitle(" PingChat v2 ")
+	for i := 0; i < listNum; i++ {//initalize pages on per-channel basis
+		name := fmt.Sprintf("channel %d", i)
+		view, prim := channel(name)//channel returns TextView and Primitive
+		msgView[name] = view
+			pages.AddPage(name,prim,true,i == 0)
+		}
+	
+	list := tview.NewList()//initalize list
+	for i := 0; i < listNum; i++ {
+		name := fmt.Sprintf("channel %d", i)
+		list.AddItem(name,"",0, func(){
+		activeChannel = name
+		pages.SwitchToPage(name)
+		})
+	}
 
 	inputBox := tview.NewInputField()
 	inputBox.SetBorder(true)
@@ -41,15 +51,55 @@ func initTUI(onSend func(string)) {
 		go onSend(text)
 	})
 
+chat := tview.NewFlex().SetDirection(tview.FlexRow).
+	AddItem(pages,0,1, true).
+	AddItem(inputBox, 3, 1, true)
+
+mainView := tview.NewFlex().
+	AddItem(list,20,0,false).
+	AddItem(chat,0,1,true)
+
+	signIn := tview.NewForm().
+		AddInputField("username", "", 20, nil, nil).
+		AddInputField("password", "", 20, nil, nil).
+		AddDropDown("username color",[]string{"red","blue","green"},0,nil).
+		AddButton("enter", func() {
+			pages.SwitchToPage("main")
+		})
+	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
+	
+	pages.AddPage("signIn",signIn,true,true)
+	pages.AddPage("main",mainView,true,false)
+
+app.SetRoot(pages,true).SetFocus(signIn) //puts the user in sign in to start
+}
+
+func channel(name string) (*tview.TextView, tview.Primitive){
+	textView := tview.NewTextView().
+		SetScrollable(true).
+		SetDynamicColors(true)
+		textView.ScrollToEnd()
+	textView.SetBackgroundColor(tcell.ColorDefault)
+	textView.SetBorderPadding(0, 0, 1, 1)
+	textView.SetBorder(true)
+	textView.SetTitle(" PingChat v2 ")
+
+	inputBox := tview.NewInputField()
+	inputBox.SetBorder(true)
+	inputBox.SetBackgroundColor(tcell.ColorDefault)
+	inputBox.SetFieldBackgroundColor(tcell.ColorDefault)
+
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(msgView, 0, 1, false).
+		AddItem(textView, 0, 1, false).
 		AddItem(inputBox, 3, 1, true)
-	app.SetRoot(flex, true).SetFocus(inputBox)
+
+	return textView, flex
 }
 
 func tuiPrint(line string) {
+	view := msgView[activeChannel]
 	app.QueueUpdateDraw(func() {
-		fmt.Fprintf(msgView, "%s\n", line)
+		fmt.Fprintf(view, "%s\n", line)
 	})
 }
 
@@ -57,4 +107,11 @@ func runTUI() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func ScrollToMessage(){
+	textView := msgView[activeChannel]
+	app.QueueUpdateDraw(func(){
+		textView.ScrollToEnd()
+	})
 }
