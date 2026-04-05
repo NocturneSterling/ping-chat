@@ -11,18 +11,21 @@ var (
 	msgView map[string]*tview.TextView
 	listNum int = 5
 	activeChannel string = "channel 0"
+	currentUser string
+	currentPass string 
 )
 
 func initTUI(onSend func(string)) {
 	app = tview.NewApplication()
 	pages := tview.NewPages()
 	msgView = make(map[string]*tview.TextView)
+	chanPages := tview.NewPages()
 
 	for i := 0; i < listNum; i++ {//initalize pages on per-channel basis
 		name := fmt.Sprintf("channel %d", i)
 		view, prim := channel(name, onSend)//channel returns TextView and Primitive
 		msgView[name] = view
-			pages.AddPage(name,prim,true,i == 0)
+			chanPages.AddPage(name,prim,true,i == 0)
 		}
 	
 	list := tview.NewList()//initalize list
@@ -30,25 +33,27 @@ func initTUI(onSend func(string)) {
 		name := fmt.Sprintf("channel %d", i)
 		list.AddItem(name,"",0, func(){
 		activeChannel = name
-		pages.SwitchToPage(name)
+		chanPages.SwitchToPage(name)//switches chan pages, not page
 		})
 	}
 
+
 chat := tview.NewFlex().SetDirection(tview.FlexRow).
-	AddItem(pages,0,1, true)
+	AddItem(chanPages,0,1, true)
 mainView := tview.NewFlex().
 	AddItem(list,20,0,false).
 	AddItem(chat,0,1,true)
 
-	signIn := tview.NewForm().
-		AddInputField("username", "", 20, nil, nil).
-		AddInputField("password", "", 20, nil, nil).
-		AddDropDown("username color",[]string{"red","blue","green"},0,nil).
-		AddButton("enter", func() {
-		username := signIn.GetFormItemByLabel("username").(*tview.InputField).GetText()
-		password := signIn.GetFormItemByLabel("password").(*tview.InputField).GetText()
-		color := signIn.GetDropDown("username color").(*tview.InputField).GetCurrentOption()
-		fmt.println(username,password,color)
+	signIn := tview.NewForm()
+		signIn.AddInputField("username", "", 20, nil, nil)
+		signIn.AddInputField("password", "", 20, nil, nil)
+		signIn.AddDropDown("username color",[]string{"red","blue","green"},0,nil)
+		signIn.AddButton("enter", func() {
+		currentUser = signIn.GetFormItemByLabel("username").(*tview.InputField).GetText()
+		currentPass = signIn.GetFormItemByLabel("password").(*tview.InputField).GetText()
+		_, color := signIn.GetFormItemByLabel("username color").(*tview.DropDown).GetCurrentOption()
+
+		fmt.Println(currentUser,currentPass,color)
 			pages.SwitchToPage("main")
 		})
 	signIn.SetBorder(true).SetTitle("enter details").SetTitleAlign(tview.AlignLeft)
