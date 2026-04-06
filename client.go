@@ -51,8 +51,10 @@ func handleResponse(responseBytes []byte, chanName string, pass string) {
 
 func runClientSender(msg string) {
 	chanNumber := 0
-	fmt.Scanf(activeChannel, "channel %d", &chanNumber)
-	pass := fmt.Sprintf("%s%d", currentPass, chanNumber)
+	var activeChan string = "channel 0"
+	fmt.Scanf(activeChan, "channel %d", &chanNumber)
+	//pass := fmt.Sprintf("%s%d", currentPass, chanNumber)
+	pass := channelPass(chanNumber)
 	msgJson := ChatMessage{Message: msg, User: currentUser, Color: *color}
 	jsonBytes, _ := json.Marshal(msgJson)
 	hash := passHash(pass)
