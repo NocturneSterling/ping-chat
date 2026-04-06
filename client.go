@@ -13,15 +13,20 @@ type ChatMessage struct {
 var lastTimestamp int
 
 func runClientSender(msg string) {
+	chanNum := 0
 	msgJson := ChatMessage{Message: msg, User: currentUser}
+	pass := channelPass(chanNum)
 	jsonBytes, _ := json.Marshal(msgJson)
-	hash := passHash(currentPass)
+	hash := passHash(pass)
 	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(currentPass))...), *ip)
 }
 
-func runClientListener() {
+func runClientListener(numChans int) {
+	name := currentChannel(numChans)
+	pass := channelPass(numChans)
+	lastTs := 0
 	for {
-		passwordHashBytes := passHash(currentPass)
+		passwordHashBytes := passHash(pass)
 		responseBytes := sendBytes(passwordHashBytes, *ip)
 		responseStr := decryptFromBytes(responseBytes, passwordHashBytes)
 		var response MsgRecord
@@ -31,22 +36,24 @@ func runClientListener() {
 			continue
 		}
 		var incomingMsgJson ChatMessage
-		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, currentPass)
+		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, pass)
 		json.Unmarshal([]byte(msgTextStr), &incomingMsgJson)
 		if response.LastMsgTimestamp != lastTimestamp {
 			if incomingMsgJson.Message == "" && incomingMsgJson.User == "" {
-				tuiPrint("Chat begins here")
+				tuiPrint(name, "Chat begins here")
 			} else {
-				tuiPrint(incomingMsgJson.User + ": " + incomingMsgJson.Message)
+				tuiPrint(name, incomingMsgJson.User + ": " + incomingMsgJson.Message)
 			}
-			lastTimestamp = response.LastMsgTimestamp
+			lastTs = response.LastMsgTimestamp
 		}
 		time.Sleep(1 * time.Second)
 	}
 }
 
 func listenClient(){
-	go runClientListener()
+	for i := 0; i < listNum; i++{
+	go runClientListener(i)
+	}
 }
 
 func runClient() {

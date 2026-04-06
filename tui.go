@@ -105,10 +105,18 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 	return textView, flex, inputBox
 }
 
-func tuiPrint(line string) {
+func currentChannel(chanNum int)(chanName string){
+	return fmt.Sprintf("channel %d",chanNum)
+}
+
+func channelPass(channelNum int)(chanPas string){
+	return fmt.Sprintf("%s%d",currentPass,channelNum)
+}
+
+func tuiPrint(name string, line string) {
 	view := msgView[activeChannel]//updates with new messages
 	app.QueueUpdateDraw(func() {
-		fmt.Fprintf(view, "%s\n", line)
+		fmt.Fprintf(view, "%s\n", name, line)
 	})
 }
 
