@@ -32,6 +32,7 @@ func enableKernelReplies(val bool) {
 }
 
 func sendBytes(data []byte, dest string) []byte {
+	//setConnectedStatus := false
 	buf := make([]byte, len(data)+11)
 	buf[0] = 8
 	buf[9], buf[10] = 0x4F, 0x4B
@@ -52,13 +53,13 @@ func sendBytes(data []byte, dest string) []byte {
 		n, addr, err := c.ReadFrom(recv)
 		if err != nil {
 			tuiPrint("Error: " + err.Error())
-			setConnectedStatus(false)
+			//setConnectedStatus = false
 			return nil
 		}
 		if n < 11 || recv[0] != 0 || addr.String() != dest || recv[9] != 0x4F || recv[10] != 0x4B {
 			continue
 		}
-		setConnectedStatus(true)
+		//setConnectedStatus = true
 		return recv[11:n]
 	}
 }
