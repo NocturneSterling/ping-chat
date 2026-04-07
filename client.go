@@ -11,7 +11,8 @@ type ChatMessage struct {
 	User    string `json:"user"`
 }
 
-var lastTimestamp int
+var lastTimestamp = map[string]int{}
+var initalizedChannels = map[string]bool{}
 
 func runClientSender(msg string) {
 	chanNum := 0
@@ -23,10 +24,10 @@ func runClientSender(msg string) {
 	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(currentPass))...), *ip)
 }
 
-func runClientListener(numChans int) {
-	name := currentChannel(numChans)
-	pass := channelPass(numChans)
-	lastTs := 0
+func runClientListener(chanNum int) {
+	channel := currentChannel(chanNum)
+	name := currentChannel(chanNum)
+	pass := channelPass(chanNum)
 	for {
 		passwordHashBytes := passHash(pass)
 		responseBytes := sendBytes(passwordHashBytes, *ip)
@@ -40,17 +41,18 @@ func runClientListener(numChans int) {
 		var incomingMsgJson ChatMessage
 		msgTextStr := decryptUsingPass(response.LastMsgEncrypted, pass)
 		json.Unmarshal([]byte(msgTextStr), &incomingMsgJson)
-		if response.LastMsgTimestamp != lastTimestamp {
-			if incomingMsgJson.Message == "" && incomingMsgJson.User == "" {
-				tuiPrint(name, "Chat begins here")
+		if response.LastMsgTimestamp != lastTimestamp[name] {
+			if incomingMsgJson.Message == "" && incomingMsgJson.User == "" && !initalizedChannels[channel]{
+				tuiPrint(channel,name,"Chat begins here")
+				initalizedChannels[channel] = true
 			} else {
-				tuiPrint(name,incomingMsgJson.User + ": " + incomingMsgJson.Message)
+				tuiPrint(channel,name,incomingMsgJson.User + ": " + incomingMsgJson.Message)
 			}
-			if response.LastMsgTimestamp != lastTs{//make match global
-			lastTs = response.LastMsgTimestamp
+			if response.LastMsgTimestamp != lastTimestamp[name]{//make match global
+			lastTimestamp[name] = response.LastMsgTimestamp
 			}
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(300 * time.Millisecond)
 	}
 }
 

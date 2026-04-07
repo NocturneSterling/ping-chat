@@ -45,7 +45,7 @@ func sendBytes(data []byte, dest string) []byte {
 	c.WriteTo(buf, dst)//Send packets
 
 	recv := make([]byte, 1500)
-	c.SetReadDeadline(time.Now().Add(3 * time.Second))
+	c.SetReadDeadline(time.Now().Add(1 * time.Second))
 	for {
 		n, addr, err := c.ReadFrom(recv)
 		if err != nil {

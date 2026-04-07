@@ -113,13 +113,13 @@ func channelPass(channelNum int)(chanPas string){
 	return fmt.Sprintf("%s%d",currentPass,channelNum)
 }
 
-func tuiPrint(name string, line string) {
-	view := msgView[name]//updates with new messages
-	if view == nil {
-		return
-	}
+func tuiPrint(channel string, name string, line string) {
+	view := msgView[channel]//updates with new messages
+	//if view == nil {
+	//	return
+	//}
 	app.QueueUpdateDraw(func() {
-	fmt.Fprintf(view, "%s\n", name, line)
+	fmt.Fprintf(view, "%s\n",name,line)
 	})
 }
 
