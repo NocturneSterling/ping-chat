@@ -86,7 +86,7 @@ func channel(name string, onSend func(string)) (*tview.TextView, tview.Primitive
 	inputBox.SetBackgroundColor(tcell.ColorDefault)
 	inputBox.SetFieldBackgroundColor(tcell.ColorDefault)
 
-	inputBox.SetDoneFunc(func(key tcell.Key) {//take input from inputBox
+	inputBox.SetDoneFunc(func(key tcell.Key) {//take input from inputBox, sends off
 		if key != tcell.KeyEnter {
 			return
 		}
@@ -114,9 +114,12 @@ func channelPass(channelNum int)(chanPas string){
 }
 
 func tuiPrint(name string, line string) {
-	view := msgView[activeChannel]//updates with new messages
+	view := msgView[name]//updates with new messages
+	if view == nil {
+		return
+	}
 	app.QueueUpdateDraw(func() {
-		fmt.Fprintf(view, "%s\n", name, line)
+	fmt.Fprintf(view, "%s\n", name, line)
 	})
 }
 

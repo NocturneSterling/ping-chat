@@ -39,7 +39,3 @@ func sendReply(ip string, incomingPayload []byte) []byte {
 	recordJson, _ := json.Marshal(record)
 	return encryptToBytes(recordJson, key)
 }
-
-func runServer() {
-	listenForPackets()
-}

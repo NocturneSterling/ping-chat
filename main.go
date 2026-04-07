@@ -18,7 +18,7 @@ func main() {
 		enableKernelReplies(true)
 	} else if *server {
 		enableKernelReplies(false)
-		runServer()
+		listenForPackets()
 	} else {
 		runClient()
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -14,8 +15,9 @@ var lastTimestamp int
 
 func runClientSender(msg string) {
 	chanNum := 0
-	msgJson := ChatMessage{Message: msg, User: currentUser}
+	fmt.Sscanf(activeChannel,"channel %d",&chanNum)//parce activeChannel number to chanNum
 	pass := channelPass(chanNum)
+	msgJson := ChatMessage{Message: msg, User: currentUser}
 	jsonBytes, _ := json.Marshal(msgJson)
 	hash := passHash(pass)
 	sendBytes(append(hash, encryptToBytes(jsonBytes, []byte(currentPass))...), *ip)
@@ -42,15 +44,17 @@ func runClientListener(numChans int) {
 			if incomingMsgJson.Message == "" && incomingMsgJson.User == "" {
 				tuiPrint(name, "Chat begins here")
 			} else {
-				tuiPrint(name, incomingMsgJson.User + ": " + incomingMsgJson.Message)
+				tuiPrint(name,incomingMsgJson.User + ": " + incomingMsgJson.Message)
 			}
+			if response.LastMsgTimestamp != lastTs{//make match global
 			lastTs = response.LastMsgTimestamp
+			}
 		}
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func listenClient(){
+func listenClient(){//listens on all channels
 	for i := 0; i < listNum; i++{
 	go runClientListener(i)
 	}
